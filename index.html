@@ -119,63 +119,106 @@ function loadTargets() {
 }
 
 // === Controls Add/Delete ===
+let addControlEl, deleteControlEl;
+
 const AddControl = L.Control.extend({
   options:{position:'topleft'},
   onAdd(){ 
-    const el=L.DomUtil.create('div','leaflet-control leaflet-control-custom');
-    el.innerHTML='➕';
-    L.DomEvent.on(el,'click',ev=>{
-      L.DomEvent.stopPropagation(ev); L.DomEvent.preventDefault(ev);
-      mode=(mode==='add')?null:'add';
-      el.classList.toggle('active');
-      if(deleteControlEl) deleteControlEl.classList.remove('active');
+    const el = L.DomUtil.create('div','leaflet-control leaflet-control-custom');
+    el.innerHTML = '➕';
+    el.id = 'add-control';
+    
+    L.DomEvent.on(el,'click',ev => {
+      L.DomEvent.stopPropagation(ev); 
+      L.DomEvent.preventDefault(ev);
+      
+      if (mode === 'add') {
+        mode = null;
+        el.classList.remove('active');
+      } else {
+        mode = 'add';
+        el.classList.add('active');
+        if (deleteControlEl) deleteControlEl.classList.remove('active');
+      }
       clearPreview();
     });
     return el;
   }
 });
+
 const DeleteControl = L.Control.extend({
   options:{position:'topleft'},
   onAdd(){
-    const el=L.DomUtil.create('div','leaflet-control leaflet-control-custom');
-    el.innerHTML='🗑️';
-    L.DomEvent.on(el,'click',ev=>{
-      L.DomEvent.stopPropagation(ev); L.DomEvent.preventDefault(ev);
-      mode=(mode==='delete')?null:'delete';
-      el.classList.toggle('active');
-      if(addControlEl) addControlEl.classList.remove('active');
+    const el = L.DomUtil.create('div','leaflet-control leaflet-control-custom');
+    el.innerHTML = '🗑️';
+    el.id = 'delete-control';
+    
+    L.DomEvent.on(el,'click',ev => {
+      L.DomEvent.stopPropagation(ev); 
+      L.DomEvent.preventDefault(ev);
+      
+      if (mode === 'delete') {
+        mode = null;
+        el.classList.remove('active');
+      } else {
+        mode = 'delete';
+        el.classList.add('active');
+        if (addControlEl) addControlEl.classList.remove('active');
+      }
       clearPreview();
     });
     return el;
   }
 });
+
+// Добавляем контролы и получаем ссылки на элементы
 map.addControl(new AddControl());
 map.addControl(new DeleteControl());
-const addControlEl=document.querySelector('.leaflet-control-custom:nth-of-type(1)');
-const deleteControlEl=document.querySelector('.leaflet-control-custom:nth-of-type(2)');
+addControlEl = document.getElementById('add-control');
+deleteControlEl = document.getElementById('delete-control');
 
 // === Utils ===
-function clearPreview(){ firstClickLatLng=null; if(previewMarker){map.removeLayer(previewMarker); previewMarker=null;} }
+function clearPreview(){ 
+  firstClickLatLng = null; 
+  if(previewMarker){
+    map.removeLayer(previewMarker); 
+    previewMarker = null;
+  } 
+}
+
 function bearingDegrees(from,to){
-  const toRad=d=>d*Math.PI/180; const toDeg=r=>r*180/Math.PI;
-  const φ1=toRad(from.lat), φ2=toRad(to.lat), Δλ=toRad(to.lng-from.lng);
-  const y=Math.sin(Δλ)*Math.cos(φ2), x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
-  return (toDeg(Math.atan2(y,x))+360)%360;
+  const toRad = d => d * Math.PI / 180; 
+  const toDeg = r => r * 180 / Math.PI;
+  const φ1 = toRad(from.lat), φ2 = toRad(to.lat), Δλ = toRad(to.lng - from.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2), x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y,x)) + 360) % 360;
 }
 
 // === Icon selection ===
-let selectedIcon=localStorage.getItem(ICON_LS)||'shahed';
-const iconOptions=document.querySelectorAll('#iconGrid .icon-option');
-function refreshIconUI(){ iconOptions.forEach(n=>n.classList.toggle('selected',n.dataset.file===selectedIcon)); }
-iconOptions.forEach(n=>{
-  n.addEventListener('click',()=>{ selectedIcon=n.dataset.file; localStorage.setItem(ICON_LS,selectedIcon); refreshIconUI(); menu.style.display='none'; });
+let selectedIcon = localStorage.getItem(ICON_LS) || 'shahed';
+const iconOptions = document.querySelectorAll('#iconGrid .icon-option');
+
+function refreshIconUI(){ 
+  iconOptions.forEach(n => n.classList.toggle('selected', n.dataset.file === selectedIcon)); 
+}
+
+iconOptions.forEach(n => {
+  n.addEventListener('click', () => { 
+    selectedIcon = n.dataset.file; 
+    localStorage.setItem(ICON_LS, selectedIcon); 
+    refreshIconUI(); 
+    menu.style.display = 'none'; 
+  });
 });
+
 refreshIconUI();
 
 // === Menu toggle ===
-const menuToggle=document.getElementById('menuToggle');
-const menu=document.getElementById('icon-menu');
-menuToggle.addEventListener('click',()=>{ menu.style.display=(menu.style.display==='none'?'block':'none'); });
+const menuToggle = document.getElementById('menuToggle');
+const menu = document.getElementById('icon-menu');
+menuToggle.addEventListener('click', () => { 
+  menu.style.display = (menu.style.display === 'none' ? 'block' : 'none'); 
+});
 
 // === Create target ===
 function createTarget(positionLatLng, bearingDeg){
@@ -190,13 +233,13 @@ function createTarget(positionLatLng, bearingDeg){
     iconAnchor: [12,12]
   });
 
-  const marker = L.marker(positionLatLng,{icon,interactive:true}).addTo(map);
+  const marker = L.marker(positionLatLng, {icon, interactive: true}).addTo(map);
 
-  marker.on('click',()=>{ 
-    if(mode==='delete'){ 
+  marker.on('click', () => { 
+    if(mode === 'delete'){ 
       map.removeLayer(marker); 
-      const idx=targets.indexOf(marker); 
-      if(idx!==-1) targets.splice(idx,1); 
+      const idx = targets.indexOf(marker); 
+      if(idx !== -1) targets.splice(idx, 1); 
       setTimeout(saveTargets, 100);
     } 
   });
@@ -206,21 +249,33 @@ function createTarget(positionLatLng, bearingDeg){
 }
 
 // === Map click ===
-map.on('click',e=>{
-  if(mode==='add'){
+map.on('click', e => {
+  if(mode === 'add'){
     if(!firstClickLatLng){
-      firstClickLatLng=e.latlng;
-      previewMarker=L.marker(firstClickLatLng,{icon:L.divIcon({html:'<div style="font-size:18px">📍</div>',iconSize:[18,18],iconAnchor:[9,9]}),interactive:false}).addTo(map);
+      firstClickLatLng = e.latlng;
+      previewMarker = L.marker(firstClickLatLng, {
+        icon: L.divIcon({
+          html: '<div style="font-size:18px">📍</div>',
+          iconSize: [18,18],
+          iconAnchor: [9,9]
+        }),
+        interactive: false
+      }).addTo(map);
     } else {
-      const bearing=bearingDegrees(firstClickLatLng,e.latlng);
-      createTarget(firstClickLatLng,bearing);
+      const bearing = bearingDegrees(firstClickLatLng, e.latlng);
+      createTarget(firstClickLatLng, bearing);
       clearPreview();
     }
   }
 });
 
-document.addEventListener('keydown',ev=>{
-  if(ev.key==='Escape'){ mode=null; addControlEl.classList.remove('active'); deleteControlEl.classList.remove('active'); clearPreview(); }
+document.addEventListener('keydown', ev => {
+  if(ev.key === 'Escape'){ 
+    mode = null; 
+    if (addControlEl) addControlEl.classList.remove('active'); 
+    if (deleteControlEl) deleteControlEl.classList.remove('active'); 
+    clearPreview(); 
+  }
 });
 
 // === Load saved targets on page load ===
