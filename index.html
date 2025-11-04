@@ -51,7 +51,10 @@ html,body{height:100%;margin:0}
 
 <script>
 // === Map ===
-const map = L.map('map').setView([49.0,31.0],6);
+const map = L.map('map', {
+  doubleClickZoom: false,
+  zoomControl: true
+}).setView([49.0,31.0],6);
 window.lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18, attribution:'© OpenStreetMap',crossorigin:true,detectRetina:true,updateWhenIdle:false,keepBuffer:2
 }).addTo(map);
@@ -225,7 +228,7 @@ function createTarget(positionLatLng, bearingDeg){
   // иконка повернута влево (270°), плюс корректировка курса на 180° чтобы «вверх» = вверх
   const adjustedBearing = (bearingDeg + 270 + 180) % 360;
 
-  const iconUrl = `icons/${selectedIcon}.png`; // выбранная иконка
+  const iconUrl = `icons/${selectedIcon}.png`;
   const icon = L.divIcon({
     className: 'target-icon',
     html: `<img src="${iconUrl}" style="width:24px;height:24px;transform:rotate(${adjustedBearing}deg);transform-origin:center;">`,
@@ -245,7 +248,7 @@ function createTarget(positionLatLng, bearingDeg){
   });
 
   targets.push(marker);
-  setTimeout(saveTargets, 1000); // Сохраняем через секунду после добавления
+  setTimeout(saveTargets, 1000);
 }
 
 // === Map click ===
@@ -280,7 +283,7 @@ document.addEventListener('keydown', ev => {
 
 // === Load saved targets on page load ===
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(loadTargets, 100); // Загружаем цели после полной загрузки страницы
+  setTimeout(loadTargets, 100);
 });
 </script>
 </body>
